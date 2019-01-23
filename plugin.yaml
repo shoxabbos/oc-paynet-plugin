@@ -1,0 +1,10 @@
+plugin:
+    name: 'shohabbos.paynet::lang.plugin.name'
+    description: 'shohabbos.paynet::lang.plugin.description'
+    author: Shohabbos
+    icon: oc-icon-puzzle-piece
+    homepage: 'https://itmaker.uz'
+permissions:
+    manage_transactions:
+        tab: 'shohabbos.paynet::lang.plugin.name'
+        label: 'Manage transactions'

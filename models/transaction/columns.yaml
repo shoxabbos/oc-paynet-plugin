@@ -1,0 +1,22 @@
+columns:
+    id:
+        label: id
+        type: number
+    trans_id:
+        label: trans_id
+        type: text
+    owner_id:
+        label: owner_id
+        type: text
+    amount:
+        label: amount
+        type: number
+    status:
+        label: status
+        type: number
+    created_at:
+        label: created_at
+        type: datetime
+    updated_at:
+        label: updated_at
+        type: datetime
