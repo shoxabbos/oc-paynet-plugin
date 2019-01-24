@@ -1,9 +1,22 @@
 <?php namespace Shohabbos\Paynet\Classes;
 
 use Event;
+use Shohabbos\Paynet\Models\Settings;
 use Shohabbos\Paynet\Models\Transaction;
-use Shohabbos\Paynet\Classes\Types\PerformTransactionResult;
+use Shohabbos\Paynet\Classes\Types\GenericParam;
+use Shohabbos\Paynet\Classes\Types\GetStatementResult;
+use Shohabbos\Paynet\Classes\Types\GetInformationResult;
 use Shohabbos\Paynet\Classes\Types\CancelTransactionResult;
+use Shohabbos\Paynet\Classes\Types\PerformTransactionResult;
+use Shohabbos\Paynet\Classes\Types\CancelTransactionArguments;
+use Shohabbos\Paynet\Classes\Types\CheckTransactionArguments;
+use Shohabbos\Paynet\Classes\Types\CheckTransactionResult;
+use Shohabbos\Paynet\Classes\Types\GenericArguments;
+use Shohabbos\Paynet\Classes\Types\GenericResult;
+use Shohabbos\Paynet\Classes\Types\GetInformationArguments;
+use Shohabbos\Paynet\Classes\Types\GetStatementArguments;
+use Shohabbos\Paynet\Classes\Types\PerformTransactionArguments;
+use Shohabbos\Paynet\Classes\Types\TransactionStatement;
 
 class ProviderWebService {
 
@@ -28,14 +41,15 @@ class ProviderWebService {
 
 	public $password;
 
-	public $serviceId = 1;
+	public $serviceId;
 
 	public $allowedIps = []; //["213.230.106.115"];
 
 
 	public function __construct() {
-		$this->username = "paynet";
-		$this->password = "maxiDrom101";
+		$this->username = Settings::get('username');
+		$this->password = Settings::get('password');
+		$this->serviceId = Settings::get('service_id');
 	}
 	
 
@@ -385,7 +399,7 @@ class ProviderWebService {
 		$password = $arguments->password;
 		$parameters = $arguments->parameters;
 		$serviceId = $arguments->serviceId;
-		$userId = isset($parameters[0]->paramValue) ? $parameters[0]->paramValue : $parameters->paramValue;
+		$userId = is_array($parameters) ? $parameters[0]->paramValue : $parameters->paramValue;
 
 		// Установим предпарамметры
 		$status = 103; // стутус траназакции

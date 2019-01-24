@@ -1,0 +1,29 @@
+tabs:
+    fields:
+        service_id:
+            label: 'SERVICE ID'
+            span: auto
+            required: 1
+            default: 1
+            type: number
+            tab: 'shohabbos.paynet::lang.settings.tab_keys'
+        username:
+            label: 'USERNAME'
+            span: auto
+            required: 1
+            type: text
+            tab: 'shohabbos.paynet::lang.settings.tab_keys'
+        password:
+            label: PASSWORD
+            span: auto
+            required: 1
+            type: text
+            tab: 'shohabbos.paynet::lang.settings.tab_keys'
+        code:
+            label: 'shohabbos.paynet::lang.settings.code'
+            size: giant
+            language: php
+            span: full
+            type: codeeditor
+            comment: 'shohabbos.paynet::lang.settings.code_desc'
+            tab: 'shohabbos.paynet::lang.settings.tab_code'

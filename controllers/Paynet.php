@@ -13,14 +13,14 @@ class Paynet extends Controller
     public function test() {
     	$req = new StdClass();
 		$req->username = 'paynet';
-		$req->password = 'maxiDrom101';
+		$req->password = 'paynet';
 		$req->amount = 10000;
 		$req->serviceId = 1;
 		$req->transactionId = 132731;
 		$req->transactionTime = time();
 
 		$param = new StdClass();
-		$param->paramValue = 21;
+		$param->paramValue = 1;
 		$param->paramKey = 'id';
 		$req->parameters[] = $param;
 

@@ -21,6 +21,8 @@ class Transaction extends Model
      */
     public $table = 'shohabbos_paynet_transactions';
 
+    public $guarded = ['id'];
+
     /**
      * @var array Validation rules
      */
