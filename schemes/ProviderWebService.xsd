@@ -1,4 +1,4 @@
-<?php echo'<?xml version="1.0" encoding="UTF-8"?>',"\n";?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:tns="http://uws.provider.com/" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://uws.provider.com/" version="1.0">
 	<xs:element name="CancelTransactionArguments" type="tns:CancelTransactionArguments"/>
 	<xs:element name="CancelTransactionResult" type="tns:CancelTransactionResult"/>

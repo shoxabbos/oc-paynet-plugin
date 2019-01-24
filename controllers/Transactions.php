@@ -5,7 +5,9 @@ use BackendMenu;
 
 class Transactions extends Controller
 {
-    public $implement = [        'Backend\Behaviors\ListController'    ];
+    public $implement = [
+    	'Backend\Behaviors\ListController'
+    ];
     
     public $listConfig = 'config_list.yaml';
 

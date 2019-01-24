@@ -1,35 +1,44 @@
-<?php namespace Shohabbos\Paynet;
+<?php namespace Shohabbos\Paynet\Classes;
+
+use Event;
+use Shohabbos\Paynet\Models\Transaction;
+use Shohabbos\Paynet\Classes\Types\PerformTransactionResult;
+use Shohabbos\Paynet\Classes\Types\CancelTransactionResult;
 
 class ProviderWebService {
-	var $exit=5;
-	var $msg = array(
-			0=>"Ok",
-			100=>"Услуга временно не поддерживается",
-			102=>"Системная ошибка",
-			103=>"Неизвестная ошибка",
-			201=>"Транзакция существует",
-			202=>"Транзакция уже отменена",
-			303=>"Пользователь не найден",
-			411=>"Не задан один или несколько обязательных параметров",
-			412=>"Пользователь не найден",
-			413=>"Неверная сумма",
-			502=>"Клиент вне зоны обслуживания провайдера",
-			601=>"Доступ запрещен"
-			);
-	var $username;
-	var $password;
-	var $allowedIps = array();//array("213.230.106.115");
-	//var $debugEmail = "shvabauer@arsenal-d.uz";
-	var $config;
+
+	public $messages = [
+		0   => "Проведено успешно",
+		77  => "Недостаточно средств на счету клиента для отмены платежа",
+		100 => "Услуга временно не поддерживается",
+		101 => "Квота исчерпана",
+		102 => "Системная ошибка",
+		103 => "Неизвестная ошибка",
+		201 => "Транзакция существует",
+		202 => "Транзакция уже отменена",
+		303 => "Пользователь не найден",
+		411 => "Не задан один или несколько обязательных параметров",
+		412 => "Неверный логин",
+		413 => "Неверная сумма",
+		502 => "Клиент вне зоны обслуживания провайдера",
+		601 => "Доступ запрещен"
+	];
+
+	public $username;
+
+	public $password;
+
+	public $serviceId = 1;
+
+	public $allowedIps = []; //["213.230.106.115"];
+
 
 	public function __construct() {
-		global $config;
-		$this->config = $config;
-		$this->class_name = $class_name;
 		$this->username = "paynet";
 		$this->password = "maxiDrom101";
 	}
 	
+
 	/**
 	 * Service Call: PerformTransaction
 	 * Parameter options:
@@ -37,8 +46,7 @@ class ProviderWebService {
 	 * @return PerformTransactionResult
 	 */
 	public function PerformTransaction($arguments) {
-		$parameters = array();
-		// тут идет получение данных из SOAP
+		$parameters = [];
 		$username = $arguments->username;
 		$password = $arguments->password;
 		$amount = $arguments->amount/100;
@@ -46,93 +54,103 @@ class ProviderWebService {
 		$serviceId = $arguments->serviceId;
 		$transactionId = $arguments->transactionId;
 		$transactionTime = $arguments->transactionTime;
-		if (count($parameters)>1) {
-			$userId = $parameters[0]->paramValue;
-		} else
-			$userId= $parameters->paramValue;
-		$log5=print_r($GLOBALS, true);
-		$log5='<pre>'.$log5.'</pre>';
-		// Установим предпарамметры
-		$isdn=0; // номер нашей транзакции
-		$st=103; // стутус траназакции
-		$balance=0; // баланс плательщика
-		$this->exit=5;
+		$userId = is_array($parameters) ? $parameters[0]->paramValue : $parameters->paramValue;
+
+		$isdn = 0; // номер нашей транзакции
+		$status = 103; // стутус траназакции
+		$balance = 0; // баланс плательщика
+		$this->exit = 5;
+
 		// теперь получим ип адрес запроса
-		$ip=getenv('REMOTE_ADDR');
-		// теперь проверим на ликвидность
-		if(in_array($ip, $this->allowedIps) || empty($this->allowedIps)){
-			$ipflag=5;
-		};
+		$ip = getenv('REMOTE_ADDR');
+		if(in_array($ip, $this->allowedIps) || empty($this->allowedIps)) {
+			$ipflag = 5;
+		}
+
+
 		// ип адрес из списка запрещенных
-		if($ipflag!=5) {
-			$st=601;
-			$this->exit=2;
+		if($ipflag !=5 ) {
+			$status = 601;
+			$this->exit = 2;
 		} else {
 			// *******************************************
 			// теперь проверим логин на правильность
-			if($username!=$this->username) {
-				$st=412;
-				$this->exit=2;
-			};
+			if($username != $this->username) {
+				$status = 412;
+				$this->exit = 2;
+			}
+
 			// теперь проверим пароль на правильность
-			if($password!=$this->password) {
-				$st=601;
-				$this->exit=2;
-			};
+			if($password != $this->password) {
+				$status = 601;
+				$this->exit = 2;
+			}
+
 			// теперь проверим провайдера
-			if($serviceId!=1) {
-				$st=502;
-				$this->exit=2;
-			};
+			if($serviceId != 1) {
+				$status = 502;
+				$this->exit = 2;
+			}
+
 			// теперь проверим есть ли все остальные параметры
-			if($amount=="" or $userId=="" or $transactionId=="" or $transactionTime==""){
-				$st=411;$this->exit=2;
-			};
+			if(empty($amount) or empty($userId) or empty($transactionId) or empty($transactionTime)) {
+				$status = 411;
+				$this->exit = 2;
+			}
+			
 			// here is coming business logic
 			if ($this->exit!=2) {
-				$res = mysql_query($q="select * from paynet where transid = {$transactionId} ");
-				if (mysql_num_rows($res)) {
-					$st=201;$this->exit=2;
+				$transaction = Transaction::where('trans_id', $transactionId)->first();
+				if ($transaction) {
+					$status = 201;
+					$this->exit = 2;
 				}
-				if ($this->exit!=2) {
-					$res = mysql_query($q="select * from 19941001_users where id = {$userId} ");
-					if (!mysql_num_rows($res)) {
-						$st=303;$this->exit=2;
-					} else {
-						$user = mysql_fetch_assoc($res);
+
+				if ($this->exit != 2) {
+					$user = null;
+			        Event::fire('shohabbos.paynet.existsAccount', [$userId, &$user]);
+
+					if (!$user) {
+						$status = 303;
+						$this->exit = 2;
 					}
 				}
 			}
-			if ($this->exit!=2) {
-				mysql_query("INSERT INTO `paynet` (transid, userid, amount, status) VALUES ('{$transactionId}', '{$userId}', '{$amount}', 1)");
-				$orderId = mysql_insert_id();
-				mysql_query("update 19941001_users set _cache = _cache + ($amount/1000) where id = {$userId}");
+
+			if ($this->exit != 2) {
+				$transaction = Transaction::create([
+					'trans_id' => $transactionId,
+					'owner_id' => $userId,
+					'amount'   => $amount,
+					'status'   => 1,
+				]);
+
+				$parameters = [];
+				Event::fire('shohabbos.paynet.performTransaction', [$transaction, &$parameters]);
+
+				foreach ($parameters as $key => $value) {
+					$parameter = new GenericParam();
+					$parameter->paramKey = $key;
+					$parameter->paramValue = $value;
+					$parameters[] = $parameter;
+				}
 				
-				$parameters = array();
-				$parameter = new GenericParam();
-				$parameter->paramKey = "bonus";
-				$parameter->paramValue = $user["_cache"] + $amount/1000;
-				$parameters[] = $parameter;
-				
-				$st = 0;
+				$status = 0;
 			}
 		}
+
 		// тут мы выдаем ответ на запрос SOAP
 		$result = new PerformTransactionResult();
-		
-		$result->providerTrnId = $orderId;
-		$result->errorMsg = $this->msg[$st];
-		$result->status = $st;
+		$result->providerTrnId = isset($transaction) ? $transaction->id : 0;
+		$result->errorMsg = $this->messages[$status];
+		$result->status = $status;
 		$result->timeStamp = date("c");
 		$result->parameters = $parameters;
-		// тут отправка почты логов
-		$log1=print_r($arguments, true);
-		$log2=print_r($result, true);
-		$log.='<pre>'.$log1.'<br><br>'.$log2.'</pre>';
-
-		//smtpSend($this->debugEmail, "PAYNET PAY", $log);
+		
 		return $result;
 	}
+
+
 	/**
 	 * Service Call: CheckTransaction
 	 * Parameter options:
@@ -145,79 +163,82 @@ class ProviderWebService {
 		$username = $arguments->username;
 		$serviceId = $arguments->serviceId;
 		$transactionId = $arguments->transactionId;
+		
 		// Установим предпарамметры
-		$isdn=0; // cвойства транзакции
-		$st=100; // стутус траназакции
-		$this->exit=5;
-		// теперь получим ип адрес запроса
+		$isdn = 0; // cвойства транзакции
+		$status = 100; // стутус траназакции
+		$this->exit = 5;
 		$ip=getenv('REMOTE_ADDR');
-		// теперь проверим на ликвидность
 		if(in_array($ip, $this->allowedIps) || empty($this->allowedIps)){
-			$ipflag=5;
+			$ipflag = 5;
 		}
+
 		// ип адрес из списка запрещенных
-		if($ipflag!=5) {
-			$st=601;
-			$this->exit=2;
+		if($ipflag != 5) {
+			$status = 601;
+			$this->exit = 2;
 		} else {
 			// *******************************************
 			// теперь проверим логин на правильность
-			if($username!=$this->username) {
-				$st=412;
-				$this->exit=5;
-			};
+			if($username != $this->username) {
+				$status = 412;
+				$this->exit = 5;
+			}
+
 			// теперь проверим пароль на правильность
-			if($password!=$this->password) {
-				$st=601;
-				$this->exit=2;
-			};
+			if($password != $this->password) {
+				$status = 601;
+				$this->exit = 2;
+			}
+
 			// теперь проверим провайдера
 			if($serviceId!=1) {
 				$st=502;
-				$this->exit=2;
-			};
+				$this->exit = 2;
+			}
+
 			// теперь проверим есть ли все остальные параметры
 			if(!$transactionId){
-				$st=411;$this->exit=2;
+				$status = 411;
+				$this->exit = 2;
 			}
 			
 			// here will coming business logic
-			if ($this->exit!=2) {
-				$res = mysql_query("select *, unix_timestamp(dateCreated) as ut  from paynet where transid = '{$transactionId}' order by id");
-				if (!mysql_num_rows($res)) {
-					$st=201;$this->exit=2;
+			if ($this->exit != 2) {
+				$transaction = Transaction::where('trans_id', $transactionId)->orderBy('id')->first();
+
+				
+				if (!$transaction) {
+					$status = 201;
+					$this->exit = 2;
 					$isdn = 0;
 				} else {
-					$row = mysql_fetch_assoc($res);
-					$st = 0;
-					$isdn = $row['id'];
+					$status = 0;
+					$isdn = $transaction->id;
 					
 					$transactionState = 1;
 					$transactionStateErrorStatus = 0;
-					if ($row['status']<1) {
+					if ($transaction->status < 1) {
 						$transactionState = 2;
 						$transactionStateErrorStatus = 1;
 					}
 				}
 			}
 		}
+
 		// тут мы выдаем ответ на запрос SOAP
 		$result = new CheckTransactionResult();
-		$result->errorMsg = $this->msg[$st];
-		$result->status = $st;
+		$result->errorMsg = $this->messages[$status];
+		$result->status = $status;
 		$result->timeStamp = date('c');
 		$result->providerTrnId = $isdn;
 		$result->transactionState = $transactionState;
 		$result->transactionStateErrorStatus = $transactionStateErrorStatus;
 		$result->transactionStateErrorMsg = "Success";
-		// тут отправка почты логов
-		$log1=print_r($arguments, true);
-		$log2=print_r($result, true);
-		$dataz=$transactionId.'-'.$rss;
-		$log='<pre>'.$log1.'<br><br>'.$dataz.'<br><br>'.$log2.'</pre>';
-		//smtpSend($this->debugEmail, "PAYNET CHECK", $log);
+
 		return $result;
 	}
+
 	/**
 	 * Service Call: CancelTransaction
 	 * Parameter options:
@@ -230,50 +251,47 @@ class ProviderWebService {
 		$username = $arguments->username;
 		$serviceId = $arguments->serviceId;
 		$transactionId = $arguments->transactionId;
+
 		// Установим предпарамметры
-		$isdn=0; // cвойства транзакции
-		$st=202; // стутус траназакции
-		$this->exit=5;
-		// теперь получим ип адрес запроса
+		$isdn = 0; // cвойства транзакции
+		$status = 202; // стутус траназакции
+		$this->exit = 5;
 		$ip=getenv('REMOTE_ADDR');
+
 		// теперь проверим на ликвидность
 		if(in_array($ip, $this->allowedIps) || empty($this->allowedIps)){
-			$ipflag=5;
-		};
+			$ipflag = 5;
+		}
 
-		$res = mysql_query("select * from paynet where transid = '{$transactionId}' order by id");
-		if (!mysql_num_rows($res)) {
-			$st=201;
-			$this->exit=2;
-		} else {
-			$row = mysql_fetch_assoc($res);
+		$transaction = Transaction::where('trans_id', $transactionId)->orderBy('id')->first();
+		if (!$transaction) {
+			$status = 201;
+			$this->exit = 2;
 		}
 		
-		if ($row['status']=='0') {
-			$st=202;
-			$this->exit=2;
+		if ($transaction && $transaction->status == '0') {
+			$status = 202;
+			$this->exit = 2;
 		} else {
-			$st = 0;
-			mysql_query("update paynet set status = 0 where transid = '{$transactionId}' ");
-			mysql_query("update 19941001_users set _cache = _cache - ({$row['amount']}/1000) where id = {$row['userid']}");
+			$status = 77;
+			Event::fire('shohabbos.paynet.cancelTransaction', [$transaction, &$status]);
+
+			if ($status == 0) {
+				$transaction->status = 0;
+				$transaction->save();
+			}
 		}
 		
-//		$st=601;
-		$this->exit=2;
 		// тут мы выдаем ответ на запрос SOAP
 		$result = new CancelTransactionResult();
-		$result->errorMsg = $this->msg[$st];
-		$result->status = $st;
+		$result->errorMsg = $this->messages[$status];
+		$result->status = $status;
 		$result->timeStamp = date("c");
 		$result->transactionState = 2;
-		// тут отправка почты логов
-		$log1=print_r($arguments, true);
-		$log2=print_r($result, true);
-		$dataz=$transactionId.'-'.$rss;
-		$log='<pre>'.$log1.'<br><br>'.$dataz.'<br><br>'.$log2.'</pre>';
-		//smtpSend($this->debugEmail, "PAYNET CANCEL", $log);
+		
 		return $result;
 	}
+
 	/**
 	 * Service Call: GetStatement
 	 * Parameter options:
@@ -287,70 +305,71 @@ class ProviderWebService {
 		$password = $arguments->password;
 		$serviceId = $arguments->serviceId;
 		$username = $arguments->username;
+
 		// Установим предпарамметры
-		$st=103; // стутус траназакции
-		$this->exit=5;
+		$status = 103; // стутус траназакции
+		$this->exit = 5;
 		// теперь получим ип адрес запроса
 		$ip=getenv('REMOTE_ADDR');
 		// теперь проверим на ликвидность
 		if(in_array($ip, $this->allowedIps) || empty($this->allowedIps)){
-			$ipflag=5;
-		};
+			$ipflag = 5;
+		}
+
 		// ип адрес из списка запрещенных
-		if($ipflag!=5) {
-			$st=601;
-			$this->exit=2;
+		if($ipflag != 5) {
+			$status = 601;
+			$this->exit = 2;
 		} else {
 			// *******************************************
 			// теперь проверим логин на правильность
-			if($username!=$this->username) {
-				$st=412;
-				$this->exit=2;
-			};
+			if($username != $this->username) {
+				$status = 412;
+				$this->exit = 2;
+			}
+
 			// теперь проверим пароль на правильность
-			if($password!=$this->password) {
-				$st=601;
-				$this->exit=2;
-			};
+			if($password != $this->password) {
+				$status = 601;
+				$this->exit = 2;
+			}
+
 			// теперь проверим провайдера
-			if($serviceId!=1) {
-				$st=502;
-				$this->exit=2;
-			};
+			if($serviceId != 1) {
+				$status = 502;
+				$this->exit = 2;
+			}
+
 			// теперь проверим есть ли все остальные параметры
-			if($dateFrom=="" or $dateTo==""){
-				$st=411;$this->exit=2;
-			};
+			if(empty($dateFrom) or empty($dateTo)){
+				$status = 411;
+				$this->exit = 2;
+			}
 			
-			$statements = array();
+			$statements = [];
 			// here will coming business logic
-			if ($this->exit!=2) {
-				$st = 0;
-				$res = mysql_query($q="select *, unix_timestamp(dateCreated) as ut from paynet where (dateCreated>='$dateFrom' and dateCreated<='$dateTo' ) and status = 1 ");
-				while ($row = mysql_fetch_assoc($res)) {
+			if ($this->exit != 2) {
+				$status = 0;
+				$transactions = Transaction::whereBetween('created_at', [$dateFrom, $dateTo])->where('status', 1)->get();
+				
+				foreach ($transactions as $key => $value) {
 					$statement = new TransactionStatement();
-					$statement->amount = $row['amount']*100;
-					$statement->providerTrnId = $row['id'];
-					$statement->transactionId = $row['transid'];
-					$statement->transactionTime = date('c',$row['ut']);
+					$statement->amount = $value->amount * 100;
+					$statement->providerTrnId = $value->id;
+					$statement->transactionId = $value->trans_id;
+					$statement->transactionTime = date('c', $transaction->created_at);
 					$statements[] = $statement;
 				}
 			}
 		}
+
 		// тут мы выдаем ответ на запрос SOAP
 		$result = new GetStatementResult();
-		$result->errorMsg = $this->msg[$st];
-		$result->status = $st;
+		$result->errorMsg = $this->messages[$status];
+		$result->status = $status;
 		$result->timeStamp = date("c");
 		$result->statements = $statements;
-		// тут отправка почты логов
-		$log1=print_r($arguments, true);
-		$log2=print_r($result, true);
-		$log3=var_export($statements, true);
-		$log4=var_export($result, true);
-		$dataz=$transactionId.'-'.$rss;
-		$log='<pre>1 '.$log1.'<br><br>2 '.$dataz.'<br><br>3 '.$log2.'<br><br>4 '.$log3.'<br><br>5 '.$log4.'</pre>';
-		//smtpSend($this->debugEmail, "PAYNET GetStatement", $log);
+		
 		return $result;
 	}
 
@@ -366,84 +385,88 @@ class ProviderWebService {
 		$password = $arguments->password;
 		$parameters = $arguments->parameters;
 		$serviceId = $arguments->serviceId;
-		
-		if (count($parameters)>1) {
-			$userId = $parameters[0]->paramValue;
-		} else
-			$userId= $parameters->paramValue;
+		$userId = isset($parameters[0]->paramValue) ? $parameters[0]->paramValue : $parameters->paramValue;
 
-		$name= $parameters->paramKey;
 		// Установим предпарамметры
-		$st=103; // стутус траназакции
-		$balance=0; // баланс плательщика
-		$this->exit=5;
+		$status = 103; // стутус траназакции
+		$balance = 0; // баланс плательщика
+		$this->exit = 5;
 		// теперь получим ип адрес запроса
 		$ip=getenv('REMOTE_ADDR');
 		// теперь проверим на ликвидность
 		if(in_array($ip, $this->allowedIps) || empty($this->allowedIps)){
 			$ipflag=5;
-		};
+		}
+
 		// ип адрес из списка запрещенных
-		if($ipflag!=5) {
-			$st=601;
-			$this->exit=2;
+		if($ipflag != 5) {
+			$status = 601;
+			$this->exit = 2;
 		} else {
+
 			// *******************************************
 			// теперь проверим логин на правильность
-			if($username!=$this->username) {
-				$st=412;
-				$this->exit=2;
-			};
+			if($username != $this->username) {
+				$status = 412;
+				$this->exit = 2;
+			}
+
 			// теперь проверим пароль на правильность
-			if($password!=$this->password) {
-				$st=601;
-				$this->exit=2;
-			};
+			if($password != $this->password) {
+				$status = 601;
+				$this->exit = 2;
+			}
+
 			// теперь проверим провайдера
-			if($serviceId!=1) {
-				$st=502;
-				$this->exit=2;
-			};
+			if($serviceId != 1) {
+				$status = 502;
+				$this->exit = 2;
+			}
+
 			// теперь проверим есть ли все остальные параметры
-			if($userId==""){
-				$st=411;$this->exit=2;
+			if(empty($userId)){
+				$status = 411;
+				$this->exit = 2;
 			}
 			
-			$res = mysql_query($q="select * from 19941001_users where id = {$userId} ");
-			if (!mysql_num_rows($res)) {
-				$st=303;$this->exit=2;
-			} else {
-				$user = mysql_fetch_assoc($res);
+			$user = null;
+			Event::fire('shohabbos.paynet.existsAccount', [$userId, &$user]);
+
+			if (!$user) {
+				$status = 303;
+				$this->exit = 2;
 			}
 			
 			// here will coming business logic
-			if ($this->exit!=2) {
-				$st = 0;
-				$this->exit=5;
+			if ($this->exit != 2) {
+				$status = 0;
+				$this->exit = 5;
 
-				$parameters = array();
-				$parameter = new GenericParam();
-				$parameter->paramKey = "userid";
-				$parameter->paramValue = $userId;
-				$parameters[] = $parameter;
-				$parameter = new GenericParam();
-				$parameter->paramKey = "bonus";
-				$parameter->paramValue = $user['_cache'];
-				$parameters[] = $parameter;
+				$parameters = [];
+				Event::fire('shohabbos.paynet.getInformation', [$userId, &$parameters]);
+
+				foreach ($parameters as $key => $value) {
+					$parameter = new GenericParam();
+					$parameter->paramKey = $key;
+					$parameter->paramValue = $value;
+					$parameters[] = $parameter;
+				}
 			}
 		}
+
 		// тут мы выдаем ответ на запрос SOAP
 		$result = new GetInformationResult();
-		$result->errorMsg = $this->msg[$st];
-		$result->status = $st;
+		$result->errorMsg = $this->messages[$status];
+		$result->status = $status;
 		$result->timeStamp = date("c");
 		$result->parameters = $parameters;
 		
-		$log1=print_r($arguments, true);
-		$log2=print_r($result, true);
-		$dataz=$transactionId.'-'.$rss;
-		$log='<pre>'.$log1.'<br><br>'.$dataz.'<br><br>'.$log2.'</pre>';
-		//smtpSend($this->debugEmail, "PAYNET GetInformation", $log);
 		return $result;
 	}
+
+
+
+
+
+
 }
