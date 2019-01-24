@@ -139,10 +139,11 @@ class ProviderWebService {
 					'status'   => 1,
 				]);
 
+				$params = [];
 				$parameters = [];
-				Event::fire('shohabbos.paynet.performTransaction', [$transaction, &$parameters]);
+				Event::fire('shohabbos.paynet.performTransaction', [$transaction, &$params]);
 
-				foreach ($parameters as $key => $value) {
+				foreach ($params as $key => $value) {
 					$parameter = new GenericParam();
 					$parameter->paramKey = $key;
 					$parameter->paramValue = $value;
