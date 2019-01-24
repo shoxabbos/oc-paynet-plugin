@@ -9,59 +9,20 @@ use Shohabbos\Paynet\Classes\ProviderWebService;
 
 class Paynet extends Controller
 {
-    
-    public function test() {
-    	$req = new StdClass();
-		$req->username = 'paynet';
-		$req->password = 'paynet';
-		$req->amount = 10000;
-		$req->serviceId = 1;
-		$req->transactionId = 132731;
-		$req->transactionTime = time();
 
-		$param = new StdClass();
-		$param->paramValue = 1;
-		$param->paramKey = 'id';
-		$req->parameters[] = $param;
-
-    	$service = new ProviderWebService();
-
-    	dump($service->PerformTransaction($req));
-    }
-
-	public function index() {		
+	public function index() {
+		date_default_timezone_set("Asia/Samarkand");
 		ini_set("soap.wsdl_cashe_enabled","0");
+
 		$server = new SoapServer("http://mangu.itmaker.uz/paynet-wsdl", [
-			'soap_version' => SOAP_1_1, 
-			'cache_wsdl' => WSDL_CACHE_NONE, 
-			'encoding' => 'UTF-8'
+			'soap_version' => SOAP_1_2,
+            'cache_wsdl' => WSDL_CACHE_NONE,
+            'encoding' => 'UTF-8'
 		]);
 
-		$server->setObject(new ProviderWebService());
+		$server->setClass(ProviderWebService::class);
 		$server->handle();
 	}
-
-
-
-	public function client() {
-		// создаем объект для отправки на сервер
-		$req = new StdClass();
-		$req->username = 'paynet';
-		$req->password = 'maxiDrom101';
-		$req->amount = 10000;
-		$req->serviceId = 1;
-		$req->transactionId = 132731;
-		$req->transactionTime = time();
-		$req->parameters['paramValue'] = 21;
-		$req->parameters['paramKey'] = 1;
-
-		$client = new SoapClient("http://mangu.itmaker.uz/paynet-wsdl", [
-			'soap_version' => SOAP_1_2
-		]);
-
-		$client->PerformTransaction($req);
-	}
-
 
 
 	public function wsdl() {
@@ -69,7 +30,7 @@ class Paynet extends Controller
 
 		return response($file)
 	        ->withHeaders([
-	            'Content-Type' => 'text/xml',
+	            'Content-Type' => 'text/xml; charset=utf-8',
 	            'Charset' => 'utf-8'
 	        ]);
     }
@@ -79,7 +40,7 @@ class Paynet extends Controller
 
 		return response($file)
 	        ->withHeaders([
-	            'Content-Type' => 'text/xml',
+	            'Content-Type' => 'text/xml; charset=utf-8',
 	            'Charset' => 'utf-8'
 	        ]);
     }

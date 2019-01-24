@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:tns="http://uws.provider.com/" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://uws.provider.com/" version="1.0">
 	<xs:element name="CancelTransactionArguments" type="tns:CancelTransactionArguments"/>
 	<xs:element name="CancelTransactionResult" type="tns:CancelTransactionResult"/>
@@ -112,7 +112,7 @@
 		<xs:sequence>
 			<xs:element name="amount" type="xs:long" minOccurs="0"/>
 			<xs:element name="providerTrnId" type="xs:long" minOccurs="0"/>
-			<xs:element name="transactionId" type="xs:long" minOccurs="0"/>
+			<xs:element name="transactionId" type="xs:long"/>
 			<xs:element name="transactionTime" type="xs:dateTime" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>

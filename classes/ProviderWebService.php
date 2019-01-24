@@ -182,6 +182,8 @@ class ProviderWebService {
 		// Установим предпарамметры
 		$isdn = 0; // cвойства транзакции
 		$status = 100; // стутус траназакции
+		$transactionState = 0;
+		$transactionStateErrorStatus = 0;
 		$this->exit = 5;
 		$ip=getenv('REMOTE_ADDR');
 		if(in_array($ip, $this->allowedIps) || empty($this->allowedIps)){
@@ -279,6 +281,7 @@ class ProviderWebService {
 		}
 
 		$transaction = Transaction::where('trans_id', $transactionId)->orderBy('id')->first();
+
 		if (!$transaction) {
 			$status = 201;
 			$this->exit = 2;
@@ -366,13 +369,13 @@ class ProviderWebService {
 			if ($this->exit != 2) {
 				$status = 0;
 				$transactions = Transaction::whereBetween('created_at', [$dateFrom, $dateTo])->where('status', 1)->get();
-				
+
 				foreach ($transactions as $key => $value) {
 					$statement = new TransactionStatement();
 					$statement->amount = $value->amount * 100;
 					$statement->providerTrnId = $value->id;
 					$statement->transactionId = $value->trans_id;
-					$statement->transactionTime = date('c', $transaction->created_at);
+					$statement->transactionTime = $value->created_at->format('c');
 					$statements[] = $statement;
 				}
 			}
@@ -457,10 +460,11 @@ class ProviderWebService {
 				$status = 0;
 				$this->exit = 5;
 
+				$params = [];
 				$parameters = [];
-				Event::fire('shohabbos.paynet.getInformation', [$userId, &$parameters]);
+				Event::fire('shohabbos.paynet.getInformation', [$userId, &$params]);
 
-				foreach ($parameters as $key => $value) {
+				foreach ($params as $key => $value) {
 					$parameter = new GenericParam();
 					$parameter->paramKey = $key;
 					$parameter->paramValue = $value;
