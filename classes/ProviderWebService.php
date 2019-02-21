@@ -29,7 +29,7 @@ class ProviderWebService {
 		103 => "Неизвестная ошибка",
 		201 => "Транзакция существует",
 		202 => "Транзакция уже отменена",
-		303 => "Пользователь не найден",
+		302 => "Пользователь не найден",
 		411 => "Не задан один или несколько обязательных параметров",
 		412 => "Неверный логин",
 		413 => "Неверная сумма",
@@ -125,7 +125,7 @@ class ProviderWebService {
 			        Event::fire('shohabbos.paynet.existsAccount', [$userId, &$user]);
 
 					if (!$user) {
-						$status = 303;
+						$status = 302;
 						$this->exit = 2;
 					}
 				}
@@ -451,7 +451,7 @@ class ProviderWebService {
 			Event::fire('shohabbos.paynet.existsAccount', [$userId, &$user]);
 
 			if (!$user) {
-				$status = 303;
+				$status = 302;
 				$this->exit = 2;
 			}
 			

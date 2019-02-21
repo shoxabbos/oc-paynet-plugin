@@ -2,7 +2,7 @@
 <wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl"  xmlns:tns="http://uws.provider.com/" name="ProviderWebService" targetNamespace="http://uws.provider.com/">
 	<wsdl:types>
 		<xs:schema>
-			<xs:import namespace="http://uws.provider.com/" schemaLocation="http://mangu.itmaker.uz/paynet-xsd"/>
+			<xs:import namespace="http://uws.provider.com/" schemaLocation="http://mangu.uz/paynet-xsd"/>
 		</xs:schema>
 	</wsdl:types>
 	<wsdl:message name="PerformTransactionRequest">
@@ -126,7 +126,7 @@
 	</wsdl:binding>
 	<wsdl:service name="ProviderWebService">
 		<wsdl:port name="ProviderWebServicePort" binding="tns:ProviderWebServiceBinding">
-			<soap:address location="http://mangu.itmaker.uz/paynet-index"/>
+			<soap:address location="http://mangu.uz/paynet-index"/>
 		</wsdl:port>
 	</wsdl:service>
 </wsdl:definitions>

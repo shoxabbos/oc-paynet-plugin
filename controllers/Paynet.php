@@ -14,7 +14,7 @@ class Paynet extends Controller
 		date_default_timezone_set("Asia/Samarkand");
 		ini_set("soap.wsdl_cashe_enabled","0");
 
-		$server = new SoapServer("http://mangu.itmaker.uz/paynet-wsdl", [
+		$server = new SoapServer("http://mangu.uz/paynet-wsdl", [
 			'soap_version' => SOAP_1_2,
             'cache_wsdl' => WSDL_CACHE_NONE,
             'encoding' => 'UTF-8'
