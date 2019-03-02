@@ -5,8 +5,12 @@ use System\Classes\PluginBase;
 
 class Plugin extends PluginBase
 {
+
     public function registerComponents()
     {
+        return [
+            \Shohabbos\Paynet\Components\PayForm::class => 'paynetPayform',
+        ];
     }
 
     public function registerSettings()

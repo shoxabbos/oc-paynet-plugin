@@ -19,6 +19,18 @@ tabs:
             required: 1
             type: text
             tab: 'shohabbos.paynet::lang.settings.tab_keys'
+        percent:
+            label: 'COMMISSION %'
+            span: auto
+            required: 1
+            type: number
+            default: 1
+            tab: 'shohabbos.paynet::lang.settings.tab_keys'
+        percent_payer_client:
+            tab: 'shohabbos.paynet::lang.settings.tab_keys'
+            label: 'COMMISSION PAYER IS CLIENT?'
+            type: switch
+            span: auto
         code:
             label: 'shohabbos.paynet::lang.settings.code'
             size: giant
