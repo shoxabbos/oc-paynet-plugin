@@ -24,6 +24,7 @@ class Plugin extends PluginBase
                 'class'       => 'Shohabbos\Paynet\Models\Settings',
                 'order'       => 1,
                 'keywords'    => 'paynet payments',
+                'permissions' => ['manage_paynet_settings']
             ],
             'transactions' => [
                 'category'    => 'PAYNET',
@@ -32,7 +33,7 @@ class Plugin extends PluginBase
                 'icon'        => 'icon-list-alt',
                 'url'         => Backend::url('shohabbos/paynet/transactions'),
                 'order'       => 2,
-                'permissions' => ['shohabbos.paynet.manage_transactions']
+                'permissions' => ['manage_paynet_transactions']
             ],
         ];
     }

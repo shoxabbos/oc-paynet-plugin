@@ -13,7 +13,7 @@ class Transactions extends Controller
     public $listConfig = 'config_list.yaml';
 
     public $requiredPermissions = [
-        'manage_transactions' 
+        'manage_paynet_transactions' 
     ];
 
     public function __construct()

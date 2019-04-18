@@ -5,6 +5,9 @@ plugin:
     icon: oc-icon-puzzle-piece
     homepage: 'https://itmaker.uz'
 permissions:
-    manage_transactions:
+    manage_paynet_transactions:
         tab: 'shohabbos.paynet::lang.plugin.name'
         label: 'Manage transactions'
+    manage_paynet_settings:
+        tab: 'shohabbos.paynet::lang.plugin.name'
+        label: 'Manage settings'
